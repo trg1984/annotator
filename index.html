@@ -1,0 +1,50 @@
+<html>
+	<head>
+		<meta  charset="UTF-8" />
+		<title>Annotator test page</title>
+        <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />		
+        <script src="http://code.jquery.com/jquery-1.9.1.js" charset="UTF-8"></script>
+		<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js" charset="UTF-8"></script>
+		<script src="annotator.js" charset="UTF-8"></script>
+		<script>
+			$(document).ready(function() {
+				$('#test1').annotator();
+                $('#test2').annotator();
+                $('#save').bind('click', function() {
+                    var state = $('#test1').annotator("saveState");
+                    $('#latest-state').val(state);
+                });
+                $('#clear').bind('click', function() {
+                    $('#test1').annotator("clearAnnotations");
+                });
+                $('#load').bind('click', function() {
+                    var state = $('#latest-state').val();
+                    $('#test1').annotator("loadState", state);
+                });
+		    });
+        </script>
+	</head>
+	<body>
+		<div id="test1"><p>You can try annotating this element</p>
+            <ul><li>You can draw highlight by pressing on start point and releasing mouse on end-point</li>
+                <li>Double clicking on the annotation area changes its mode between highlighter and line</li>
+                <li>After clicking on the area you can type if you want to add text, moving mouse saves the text</li>
+                <li>Ctrl+click adds a new note</li>
+                <li>Ctrl+click on an existing note opens that note for editing</li>
+                <li>Shift+ctrl+click deletes the clicked note</li>
+                <li>Pressing ctrl+z while on annotation area undos the latest change (no redo)</li>
+            </ui>
+        </div>
+        <div><p>This paragraph cannot be annotated.</p><br/><br/>
+            <p>You can use these buttons to test some annotator-functions 
+            on the upper annotator.</p>
+            <input type="button" title="save" value="Save state" id="save"/>
+            <input type="button" title="clear" value="Clear state" id="clear"/>
+            <input type="button" title="load" value="Load saved state" id="load"/>
+        </div>
+        <div id="test2"><p>You can have multiple elements that are annotated on the same page</p>
+            This text area holds the latest saved state.
+            <textarea id="latest-state" style="width: 80%"></textarea></div>
+        </div>
+	<body>
+</html>
