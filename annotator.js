@@ -7,8 +7,8 @@
 //      font or note-graphics) 
 //  also handle events that change the position of the element (easy if the size does not change)
 
-// ensure that $ and undefined are what is expected inside 
-// the closure
+// The closure ensures that what $ and 'undefined' can be safely 
+// used even if some other library had overridden them
 (function($, undefined) {
 
 $.widget( "rolind.annotator", {
@@ -16,6 +16,8 @@ $.widget( "rolind.annotator", {
     // relevant draw-functions can be overridden to use 
     // different stylings etc.
     options: {
+        // two modes are supported: editable and read-only
+        mode: 'editable',
         drawers: {
             line: $.noop,
             hilight: $.noop,
@@ -88,6 +90,30 @@ $.widget( "rolind.annotator", {
         this._bindListeners();
     },
 
+    _setOption: function(key, value) {
+        if ( key == 'mode' ) {
+            value = this._handleModeChange(value);    
+        }
+        this._super(key, value);
+    },
+
+    _handleModeChange: function(newMode) {
+        var resMode = newMode;
+        // restrain all other values to 'editable'        
+        if ( resMode !== 'read-only' ) {
+            resMode = 'editable';
+        }   
+        // if mode changed 
+        if ( resMode !== this.options.mode ) {
+            if ( resMode === 'read-only' ) {
+                this._unbindListeners();
+            } else {
+                this._bindListeners();
+            }
+        }
+        return resMode;
+    },
+
     // creates a canvas over this.element and returns its context
     _createCanvas: function() {
         var canv = $('<canvas/>').css({
@@ -102,14 +128,18 @@ $.widget( "rolind.annotator", {
         return ctx;
     },
 
+    _unbindListeners: function() {
+        this.element.off('.annotator');
+    },
+
     _bindListeners: function() {
         var that = this;
-        this.element.bind('dblclick',  function(event) {
+        this.element.on('dblclick.annotator',  function(event) {
 		    if (event.buttons == 1) {
 			    that.annot.mode = (that.annot.mode + 1) % 2;
 		    }
 	    });
-	    this.element.bind('mousedown', function (event) {
+	    this.element.on('mousedown.annotator', function (event) {
 
             that.annot.dx = event.pageX - that.annot.left;
 		    that.annot.dy = event.pageY - that.annot.top;
@@ -125,7 +155,7 @@ $.widget( "rolind.annotator", {
                 that.annot.writeOn = true;
             }
 	    });
-	    this.element.bind('mousemove', function (event) {
+	    this.element.on('mousemove.annotator', function (event) {
 		    if ( that.annot.txtBuffer !== "" ) {
                 that._handleEvent('text', [that.annot.dx, that.annot.dy,
                         that.annot.txtBuffer]);
@@ -141,7 +171,7 @@ $.widget( "rolind.annotator", {
                     that.annot.my]);
             }
 	    });
-	    this.element.bind('mouseup', function (event) {
+	    this.element.on('mouseup.annotator', function (event) {
 
 		    that.annot.mx = event.pageX - that.annot.left;
 		    that.annot.my = event.pageY - that.annot.top;
@@ -156,10 +186,10 @@ $.widget( "rolind.annotator", {
             }
 		    that.annot.lDown = false;//(event.buttons == 1);
 	    });
-        this.element.bind('mouseenter', function(event) {
+        this.element.on('mouseenter.annotator', function(event) {
             that.annot.catchCmds = true;
         });
-        this.element.bind('mouseleave', function(event) {
+        this.element.on('mouseleave.annotator', function(event) {
             that.annot.writeOn = false;
             that.annot.catchCmds = false;
             that.annot.lDown = false;

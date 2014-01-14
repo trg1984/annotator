@@ -21,6 +21,12 @@
                     var state = $('#latest-state').val();
                     $('#test1').annotator("loadState", state);
                 });
+                $('#read-only').bind('click', function() {
+                    $('#test1').annotator('option', 'mode', 'read-only');
+                });
+                $('#editable').bind('click', function() {
+                    $('#test1').annotator('option', 'mode', 'editable');
+                });
 		    });
         </script>
 	</head>
@@ -41,6 +47,8 @@
             <input type="button" title="save" value="Save state" id="save"/>
             <input type="button" title="clear" value="Clear state" id="clear"/>
             <input type="button" title="load" value="Load saved state" id="load"/>
+            <input type="button" title="read-only" value="Read only mode" id="read-only"/>
+            <input type="button" title="editable" value="Editable mode" id="editable"/>
         </div>
         <div id="test2"><p>You can have multiple elements that are annotated on the same page</p>
             This text area holds the latest saved state.
