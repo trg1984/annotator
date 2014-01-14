@@ -65,12 +65,7 @@ $.widget( "rolind.annotator", {
             events: [],
             // container for note-handler to draw notes on
             noteContainer: null,
-            // note-icon
-//            noteIcon: {},
-//            noteIconWidth: 16,
-//            noteIconHeight: 16,
-            // look-up map for pixels taken by notes
-//            noteLookup: {},
+            // current note-handler implementation
             noteHandler: {}
         };
         // catch the upper-left corner, initiate needed canvases, pre-load
@@ -82,11 +77,6 @@ $.widget( "rolind.annotator", {
         this.annot.noteContainer = this._createNoteContainer();
         
         var that = this;
-//        this.annot.noteIcon.onload = function() {
-//            that.annot.noteIconWidth = that.annot.noteIcon.width;
-//            that.annot.noteIconHeight = that.annot.noteIcon.height;
-//        };
-//        this.annot.noteIcon.src = this.options.noteIconUrl;
         $.extend(this.options, $.rolind.annotator.defHandlers, this.options);
         this.annot.noteHandler = this.options.noteHandlerFactory(this.annot.noteContainer);
         this._handleModeChange(this.options.mode, true);
@@ -160,12 +150,12 @@ $.widget( "rolind.annotator", {
             that.annot.dx = event.pageX - that.annot.left;
 		    that.annot.dy = event.pageY - that.annot.top;
 
-		    that.annot.mx = event.pageX - that.annot.left;
-		    that.annot.my = event.pageY - that.annot.top;
+		    that.annot.mx = that.annot.dx;
+		    that.annot.my = that.annot.dy;
 
             // click with ctrl pressed is 'note'-click
             if ( event.ctrlKey ) {
-                that._handleNoteClick(event.shiftKey);
+                that._addNewNote(that.annot.mx, that.annot.my);
             } else {
 		        that.annot.lDown = event.buttons == 1;
                 that.annot.writeOn = true;
@@ -174,7 +164,7 @@ $.widget( "rolind.annotator", {
 	    this.element.on('mousemove.annotator', function (event) {
 		    if ( that.annot.txtBuffer !== "" ) {
                 that._handleEvent('text', [that.annot.dx, that.annot.dy,
-                        that.annot.txtBuffer]);http://www.w3schools.com/tags/att_textarea_readonly.asp
+                        that.annot.txtBuffer]);
                 that.annot.txtBuffer = "";
             }
 
@@ -228,84 +218,17 @@ $.widget( "rolind.annotator", {
             }
         });
     },
-    
-    // find if there is a note on this coordinate
-//    _lookupNotes: function(x, y) {
-//       if ( this.annot.noteLookup[x] ) {
-//            return this.annot.noteLookup[x][y];
-//        } else { return undefined; }
-//    },
 
     // adds a new note to this coordinate
     _addNewNote: function(x,y) {
         var id = this._nextId();
-//        this._drawNote(this.annot.dx, this.annot.dy);
- //       this._addNoteLu(id, x, y);
-//        this.annot.notes[id] = { noteX: x, noteY: y, data: {} };
         this.annot.noteHandler.newNote(x,y);
         return id;
     },
 
-    // adds this notes coordinates to lookup-table
-//    _addNoteLu: function(id, x, y) {
-//        var noteLu = this.annot.noteLookup;
-//        for ( var i = 0, maxI = this.annot.noteIconWidth; i < maxI; i++ ) {
-//            // initiate x if there is nothing with same x-coordinates
-//            if ( noteLu[x + i] === undefined ) { noteLu[x + i] = {} };
-//            for ( var j = 0, maxJ = this.annot.noteIconHeight; j < maxJ; j++) {
-//                noteLu[x + i][y + j] = id;
-//            }
-//        }
-//    },
-
-    // deletes note and cleans it up from look-up table
-//    _deleteNote: function(noteId) {
-//        var noteObj = this.annot.notes[noteId], noteLu = this.annot.noteLookup;
-//        this.annot.noteHandler.deleteNote(noteId);
-//        delete this.annot.notes[noteId];
-//        for ( var i = 0, maxI = this.annot.noteIconWidth; i < maxI; i++ ) {
-//            // this can leak a little memory (ie. not delete some unnecessary x-columns)
-//            for ( var j = 0, maxJ = this.annot.noteIconHeight; j < maxJ; j++) {
-//                delete noteLu[noteObj.noteX + i][noteObj.noteY + j];
-//            }
-//        }
-//    },
-
-    // 
-    _handleNoteClick: function(askingDel) {
-        var x = this.annot.dx, y = this.annot.dy;
-        this._addNewNote(x,y);
-//            idToShow = this._lookupNotes(x,y);
-//       if ( idToShow === undefined ) {
-//           if ( ! askingDel ) {
-//                idToShow = this._addNewNote(x,y);
-//            }
-//        }
-//        if ( askingDel ) {
-//            if ( idToShow !== undefined ) {
-//                this._deleteNote(idToShow);
-//                this._redrawState();
-//            }
-//        } else {
-//            this.annot.noteHandler.showNote(idToShow);
-//        }
-    },
-
-    // draws note icon to given coordinates
-//    _drawNote: function(x, y) {
-//        this.annot.mainCtx.drawImage(this.annot.noteIcon, x, y);
-//    },
-
     // returns the current state as JSON-string
     saveState: function() {
-//        var that = this;
-        // aske note-handler to save its state
-        // and add the data returned from it to notes
         this.annot.notes = this.annot.noteHandler.saveState();
-//        $.each(this.annot.notes, function(key, value) {
-//            var data = that.annot.noteHandler.saveNote(key);
-//            that.annot.notes[key].data = data;
-//        });
         var state = {
             drawings: this.annot.drawings,
             notes: this.annot.notes
@@ -318,12 +241,6 @@ $.widget( "rolind.annotator", {
         var newState = JSON.parse(jsonStr), that = this;
         this.clearAnnotations();
         this.annot.drawings = newState.drawings;
-//        this.annot.notes = newState.notes;
-//        // load all notes
-//        $.each(this.annot.notes, function(key, value) {
-//            that.annot.noteHandler.loadNote(key, value.data);
-//            that._addNoteLu(key, value.noteX, value.noteY);
-//        });
         this._redrawState();
         this.annot.noteHandler.loadState(newState.notes);
     },
@@ -335,8 +252,9 @@ $.widget( "rolind.annotator", {
         this.annot.drawings = {};
         this._clearCanvas(this.annot.mainCtx);
         this._clearCanvas(this.annot.preCtx);
-        // first asked all notes to be deleted from external system
+        // first ask all notes to be deleted from external note-handler
         this.annot.noteHandler.clearState();
+        // then empty the note-element container
         this.annot.noteContainer.empty();
     },
 
@@ -386,9 +304,6 @@ $.widget( "rolind.annotator", {
         $.each(this.annot.drawings, function(key, value) {
             that._drawEvent(that.annot.mainCtx, value.type, value.args);
         });
-//        $.each(this.annot.notes, function(key, value) {
-//            that._drawNote(value.noteX, value.noteY);
-//        });
     },
 
     // draws given drawing event to given canvas
